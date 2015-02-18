@@ -1,0 +1,50 @@
+﻿Build started 2/18/2015 1:01:40 PM.
+     1>Project "C:\Users\njiang\NI\projects\reconstruction3D\reconstruction3D_vs\reconstruction3D_vs\reconstruction3D_vs.vcxproj" on node 2 (build target(s)).
+     1>PrepareForBuild:
+         Creating directory "C:\Users\njiang\NI\projects\reconstruction3D\reconstruction3D_vs\Debug\".
+       InitializeBuildStatus:
+         Creating "Debug\reconstruction3D_vs.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yc"StdAfx.h" /Fp"Debug\reconstruction3D_vs.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt stdafx.cpp
+         stdafx.cpp
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\reconstruction3D_vs.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\src\InitPara.cpp ..\..\src\Main.cpp ..\..\src\Octree.cpp ..\..\src\ReconstructOctree.cpp ..\..\src\TriSurfMesh.cpp
+         TriSurfMesh.cpp
+     1>c:\users\njiang\ni\projects\reconstruction3d\src\trisurfmesh.cpp(1): warning C4627: '#include "include/TriSurfMesh.h"': skipped when looking for precompiled header use
+                 Add directive to 'StdAfx.h' or rebuild precompiled header
+     1>c:\users\njiang\ni\projects\reconstruction3d\src\trisurfmesh.cpp(138): fatal error C1010: unexpected end of file while looking for precompiled header. Did you forget to add '#include "StdAfx.h"' to your source?
+         ReconstructOctree.cpp
+     1>c:\users\njiang\ni\projects\reconstruction3d\src\reconstructoctree.cpp(1): warning C4627: '#include "include/ReconstructOctree.h"': skipped when looking for precompiled header use
+                 Add directive to 'StdAfx.h' or rebuild precompiled header
+     1>c:\users\njiang\ni\projects\reconstruction3d\src\reconstructoctree.cpp(2): warning C4627: '#include <ctime>': skipped when looking for precompiled header use
+                 Add directive to 'StdAfx.h' or rebuild precompiled header
+     1>c:\users\njiang\ni\projects\reconstruction3d\src\reconstructoctree.cpp(3): warning C4627: '#include <math.h>': skipped when looking for precompiled header use
+                 Add directive to 'StdAfx.h' or rebuild precompiled header
+     1>c:\users\njiang\ni\projects\reconstruction3d\src\reconstructoctree.cpp(4): warning C4627: '#include "include/para.h"': skipped when looking for precompiled header use
+                 Add directive to 'StdAfx.h' or rebuild precompiled header
+     1>c:\users\njiang\ni\projects\reconstruction3d\src\reconstructoctree.cpp(510): fatal error C1010: unexpected end of file while looking for precompiled header. Did you forget to add '#include "StdAfx.h"' to your source?
+         Octree.cpp
+     1>c:\users\njiang\ni\projects\reconstruction3d\src\octree.cpp(1): warning C4627: '#include "include/octree.h"': skipped when looking for precompiled header use
+                 Add directive to 'StdAfx.h' or rebuild precompiled header
+     1>c:\users\njiang\ni\projects\reconstruction3d\src\octree.cpp(2): warning C4627: '#include "include/util.h"': skipped when looking for precompiled header use
+                 Add directive to 'StdAfx.h' or rebuild precompiled header
+     1>c:\users\njiang\ni\projects\reconstruction3d\src\octree.cpp(3): warning C4627: '#include <fstream>': skipped when looking for precompiled header use
+                 Add directive to 'StdAfx.h' or rebuild precompiled header
+     1>c:\users\njiang\ni\projects\reconstruction3d\src\octree.cpp(544): fatal error C1010: unexpected end of file while looking for precompiled header. Did you forget to add '#include "StdAfx.h"' to your source?
+         Main.cpp
+     1>c:\users\njiang\ni\projects\reconstruction3d\src\main.cpp(1): warning C4627: '#include "include/ReconstructOctree.h"': skipped when looking for precompiled header use
+                 Add directive to 'StdAfx.h' or rebuild precompiled header
+     1>c:\users\njiang\ni\projects\reconstruction3d\src\main.cpp(2): warning C4627: '#include "include/connect.h"': skipped when looking for precompiled header use
+                 Add directive to 'StdAfx.h' or rebuild precompiled header
+     1>c:\users\njiang\ni\projects\reconstruction3d\src\main.cpp(4): warning C4627: '#include <sstream>': skipped when looking for precompiled header use
+                 Add directive to 'StdAfx.h' or rebuild precompiled header
+     1>c:\users\njiang\ni\projects\reconstruction3d\src\main.cpp(377): fatal error C1010: unexpected end of file while looking for precompiled header. Did you forget to add '#include "StdAfx.h"' to your source?
+         InitPara.cpp
+     1>c:\users\njiang\ni\projects\reconstruction3d\src\initpara.cpp(1): warning C4627: '#include "include/para.h"': skipped when looking for precompiled header use
+                 Add directive to 'StdAfx.h' or rebuild precompiled header
+     1>c:\users\njiang\ni\projects\reconstruction3d\src\initpara.cpp(1150): fatal error C1010: unexpected end of file while looking for precompiled header. Did you forget to add '#include "StdAfx.h"' to your source?
+         Generating Code...
+     1>Done Building Project "C:\Users\njiang\NI\projects\reconstruction3D\reconstruction3D_vs\reconstruction3D_vs\reconstruction3D_vs.vcxproj" (build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:00.56
