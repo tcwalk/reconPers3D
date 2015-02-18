@@ -25,6 +25,7 @@ SOURCES += src/Main.cpp \
     src/Octree.cpp \
     src/ReconstructOctree.cpp \
     src/TriSurfMesh.cpp \
+    src/InitPara.cpp
 
 HEADERS += \
     include/CImg.h \
