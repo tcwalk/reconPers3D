@@ -1,1 +1,1 @@
-./reconstruction3D 1 652 752 10000000 /home/twalk/roots3d/silhouette/ZmTCWp0020d05_ 36 /home/twalk/roots3d/silhouette/para72.txt 1 1 1 /home/twalk/roots3d/silhouette/ZmTCWp0020d05_recon.out 0 2 /home/twalk/roots3d/silhouette/ZmTCWp0020d05_01 1
+/home/twalk/roots3d/reconstruction3D/release/reconstruction3D 1 652 752 10000000 /home/twalk/roots3d/silhouette/ZmTCWp0020d05_ 36 4 -1 1 /home/twalk/roots3d/silhouette/ZmTCWp0020d05_recon_2015apr7.out 0 2 /home/twalk/roots3d/silhouette/ZmTCWp0020d05_01 1

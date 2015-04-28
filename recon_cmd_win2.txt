@@ -1,0 +1,3 @@
+C:/Users/tom/danforth/roots3d/RootWork_vs/Release/RootWork.exe 1 652 752 10000000 C:/Users/tom/danforth/roots3d/silhouette/ZmTCWp0020d05_ 36 1 1 1 C:/Users/tom/danforth/roots3d/silhouette/ZmTCWp0020d05_recon_win.out 0 2 C:/Users/tom/danforth/roots3d/silhouette/ZmTCWp0020d05_01 1
+
+

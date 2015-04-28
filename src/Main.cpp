@@ -17,7 +17,7 @@ public:
 private:
     unsigned int check(Point lp, Point hp, int &radius, int &nImagesConsistent) {
         nImagesConsistent = 0; return 0;
-    } 
+    }
 };
 
 void outputVoxels(vector< Point* >& myobj, const char* filename, float extrainfo)
@@ -34,14 +34,14 @@ void outputVoxels(vector< Point* >& myobj, const char* filename, float extrainfo
     outfile.close();
 }
 
-void outputVoxels(vector< Point* >& myobj, vector< int > &comp_index, 
+void outputVoxels(vector< Point* >& myobj, vector< int > &comp_index,
                     const char* filename, int gr_index, float extrainfo)
 {
     ofstream outfile(filename);
     vector< Point* >::const_iterator p_point;
     vector< int >::const_iterator p_comp_index;
     int np = 0;
-    for (p_comp_index = comp_index.begin(); p_comp_index != comp_index.end(); 
+    for (p_comp_index = comp_index.begin(); p_comp_index != comp_index.end();
         ++p_comp_index) {
         if (*p_comp_index == gr_index) np++;
     }
@@ -49,7 +49,7 @@ void outputVoxels(vector< Point* >& myobj, vector< int > &comp_index,
     outfile << np << endl;
 
     Point* point;
-    for (p_point = myobj.begin(), p_comp_index = comp_index.begin(); 
+    for (p_point = myobj.begin(), p_comp_index = comp_index.begin();
         p_point != myobj.end(); ++p_point, ++p_comp_index) {
         if (*p_comp_index != gr_index) continue;
         point = *p_point;
@@ -58,7 +58,7 @@ void outputVoxels(vector< Point* >& myobj, vector< int > &comp_index,
     outfile.close();
 }
 
-void loadVoxels(string filename, vector< Point* >& myobj, int& imgWidth, int &imgHeight) 
+void loadVoxels(string filename, vector< Point* >& myobj, int& imgWidth, int &imgHeight)
 {
     ifstream infile(filename.c_str());
     int n, i;
@@ -80,7 +80,7 @@ void loadVoxels(string filename, vector< Point* >& myobj, int& imgWidth, int &im
     imgHeight++; imgWidth++;
 }
 
-int main(int argc, char** argv) 
+int main(int argc, char** argv)
 {
     if (argc < 2) {
         cout << "Invalid arguments" << endl;
@@ -112,7 +112,7 @@ int main(int argc, char** argv)
     }
 */
 
-    
+
     int imgWidth = atoi(argv[2]);
     int imgHeight = atoi(argv[3]);
     Point fullsize( imgWidth, imgWidth, imgHeight );
@@ -132,21 +132,21 @@ int main(int argc, char** argv)
     // vp
     //
     // if distortion_radius <0,
-    // then it can be adjusted in the program based on ref_img and ratio- see comments below 
-    //  
-    // if distortion_radius >= 0,then the ref_img and ratio are used 
+    // then it can be adjusted in the program based on ref_img and ratio- see comments below
+    //
+    // if distortion_radius >= 0,then the ref_img and ratio are used
     // to check against the given rotation image (reference image)
     //
     int distortion_radius = atoi(argv[9]);
 
     int num_components = atoi(argv[10]);
     float extrainfo = atof(argv[12]);
-    int rotation_digits = atoi(argv[13]); 
+    int rotation_digits = atoi(argv[13]);
 
     //
-    // vp 
+    // vp
     //
-    // passed and used only if distortion_radius <0  - see comments below 
+    // passed and used only if distortion_radius <0  - see comments below
     //
     int ref_img = atoi(argv[14]);
 
@@ -189,34 +189,34 @@ int main(int argc, char** argv)
 
     cout << "" << endl;
     cout << "NOTE: extrainfo, ref_img, ratio parameters are currently not used" << endl;
-    cout << "" << endl;    
+    cout << "" << endl;
 
     vector< Point* > myobj;
     vector< int > comp_index;
-    int nComp;    
+    int nComp;
 
 
     if (distortion_radius >= 0)
     {
           cout << "construct octree..." << endl;
-          ReconstructOctree octree(numNodesOnOctree, fullsize, Unit, silPrefix, 
+          ReconstructOctree octree(numNodesOnOctree, fullsize, Unit, silPrefix,
 //                                      numImgUsed, ".bmp", paraFilePathName,
                                       numImgUsed, ".png",
                                       distortion_radius,rotation_digits);
           Point volsize(fullsize/sampling);
           testOctree(&octree, volsize);
-  
+
           cout << "generate candidate voxels..." << endl;
           int npts = octree.getNumVoxel();
           int *consistency = new int[npts];
           int *reliability = new int[npts];
           Point *pts = new Point[npts];
           octree.outputVoxels(consistency, reliability, pts);
-  
+
           cout << "guarantee connectedness..." << endl;
           nComp = guarantee_connectedness(consistency, reliability, pts, npts, &volsize, 100, myobj, comp_index);
           cout << myobj.size() << " voxels, " << nComp << " components." << endl;
-          
+
           cout << "output voxels..." << endl;
 
           // tw 2015feb5
@@ -230,7 +230,7 @@ int main(int argc, char** argv)
 	         // sprintf_s does not work
 	         //
 	         // Fix (probably, not the best)
-	         //  
+	         //
 	         // makes concatenation filename + number, that argv[11] + "_" + i + 1
 	         //
 		 std::stringstream sstm;
@@ -251,30 +251,30 @@ int main(int argc, char** argv)
 
     }
 //
-// vp 
+// vp
 //
-// to disable pass distortion_radius >=0 
+// to disable pass distortion_radius >=0
 // Here is where the ref_img and ratio are used to check against the given rotation image (reference image)
 //
 // Checking against the given rotation image does not seem to improve reconstruction too much.
-// Sometimes one can see that it will help to reconstruct some finer details 
-// (thin branches that are located far from the center). But it is not consistent and 
-// depends on the reference image. 
+// Sometimes one can see that it will help to reconstruct some finer details
+// (thin branches that are located far from the center). But it is not consistent and
+// depends on the reference image.
 // "Average over all reference images (all rotations)", probably, might help, but there is no such a concept now.
 //
 //begin///////////////////////////////////////////////////////////////////////
     else {
-    
-      //while (ratio >= MIN_REF_RATIO) {   
-    
+
+      //while (ratio >= MIN_REF_RATIO) {
+
       //     cout << "try: REF_RATIO = " << ratio << endl;
-  
+
           if (num_components < 0) {
               cout << "Invalid arguments" << endl;
               exit(-1);
           }
 
-          ReconstructOctree octree(numNodesOnOctree, fullsize, Unit, silPrefix, 
+          ReconstructOctree octree(numNodesOnOctree, fullsize, Unit, silPrefix,
 //                                            numImgUsed, ".bmp", paraFilePathName,
                                             numImgUsed, ".png",
                                             distortion_radius, rotation_digits);
@@ -286,23 +286,23 @@ int main(int argc, char** argv)
           bool isGenResult = true;
           while (true) {
              if (distortion_radius > MAX_DISTORTION_RADIUS) {
-                  isGenResult = false; 
+                  isGenResult = false;
                   break;
              }
-            
+
               cout << "try: distortion_radius = " << distortion_radius << endl;
-  
+
               cout << "construct octree..." << endl;
               octree.setDistortionRadius(distortion_radius);
               testOctree(&octree, volsize);
-  
+
               cout << "generate candidate voxels..." << endl;
               npts = octree.getNumVoxel();
               consistency = new int[npts];
               reliability = new int[npts];
               pts = new Point[npts];
               octree.outputVoxels(consistency, reliability, pts);
-  
+
               //cout << "check consistency..." << endl;
               //if (octree.addConsistency(ref_img, consistency, reliability, pts, npts, ratio))
               //{
@@ -312,14 +312,14 @@ int main(int argc, char** argv)
                         break;
                     }
               //}
-  
+
               delete[] consistency;
               delete[] reliability;
               delete[] pts;
               distortion_radius++;
           }
 //end///////////////////////////////////////////////////////////////////////
-  
+
           if (isGenResult)
           {
             cout << myobj.size() << " voxels." << endl;
@@ -341,13 +341,13 @@ int main(int argc, char** argv)
             if(nComp < 2)
             {
             	return 0;
-            }    
+            }
             for (int i = 0; i < nComp; ++i)
             {
                 // sprintf_s does not work
                 //
                 // Fix (probably, not the best)
-                //  
+                //
                 // makes concatenation filename + number, that argv[11] + "_" + i + 1
                 //
 		std::stringstream sstm;
@@ -363,14 +363,14 @@ int main(int argc, char** argv)
 		memcpy(fn,buffer.c_str(),buffer.size());
 		//
 
-		outputVoxels(myobj, comp_index, fn, i, extrainfo);                 
+		outputVoxels(myobj, comp_index, fn, i, extrainfo);
              }
              //break;
-          }          
-      
+          }
+
       //    ratio -= RATIO_STEP;
       //}
     }
-    
+
     return 0;
 }

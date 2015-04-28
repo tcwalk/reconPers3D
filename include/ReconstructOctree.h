@@ -1,10 +1,16 @@
 #pragma once
 
 #include "octree.h"
-#include "CImg.h"
 #include <iostream>
 #include <fstream>
 #include "math.h"
+
+
+#define cimg_use_png CIMG_USE_PNG
+#include "CImg.h"
+using namespace cimg_library;
+#define cimg_use_magick
+
 
 using namespace cimg_library;
 
@@ -14,8 +20,8 @@ public:
 	/*
 	Note: cubeSize should be odd
 	*/
-	ReconstructOctree(int maxNode, Point fullSize, Point endSize, 
-		string sil_prefix, int nfile, string file_ext, 
+	ReconstructOctree(int maxNode, Point fullSize, Point endSize,
+		string sil_prefix, int nfile, string file_ext,
         int distortion_radius, int rotation_digits);
 //        string file_conf, int distortion_radius, int rotation_digits);
 
@@ -27,7 +33,7 @@ public:
 	/**
 	* release the memory of image information
 	*/
-	void dropImage(); 
+	void dropImage();
 
 	void setDistortionRadius(int distortion_radius) {this->distortion_radius = distortion_radius;}
 
@@ -37,7 +43,7 @@ public:
 	bool addConsistency(int refImageID, int* consistency, int* reliability, Point* points, int npts, double ratio);
 
 protected:
-	
+
 	/*
 	* check whether a node should be expanded or not
 	* input:
@@ -59,7 +65,7 @@ protected:
 	*	false:	otw.
 	*/
 	bool expand_check(Point* p);
-	
+
 	/*
 	* read image information
 	* input:
@@ -68,7 +74,7 @@ protected:
 	*	file_ext:		extension of input image files
 	*	store image information in images_*;
 	*/
-	void readSilhouettes(string file_prefix, int nfile, 
+	void readSilhouettes(string file_prefix, int nfile,
                          string file_ext, int rotation_digits);
 
 	/*
@@ -112,20 +118,34 @@ protected:
 	*	row:		row after back projection (return value)
 	*	col:		column after back projection (return value)
 	*/
-	void orthographicProject(int image, Point p, int& row, int& col);
+
+    // tw 2015apr27
+    // Changes for perspective
+
+    //void orthographicProject(int image, Point p, int& row, int& col);
+    void PerspectiveProject(int image, Point p, int& row, int& col);
 
 protected:
-	int*** silhouette_stat;							// #. 1's in the corresponding rectangle 
+	int*** silhouette_stat;							// #. 1's in the corresponding rectangle
 	int image_width, image_height;					// width and height of the images
 	int nimages;									// #. images
 	float image_center_x, image_center_y;			// center of image
 
 	float** Rs;										// rotation matrix
-	bool *chooselx, *choosely, *choosehx, *choosehy;
 	float scales[2];								// zoom scale;
 	Point halfSize;									// half of the cube size
 
 	int distortion_radius;
+
+    // tw 2015apr27
+    // Changes for perspective
+    //bool *chooselx, *choosely, *choosehx, *choosehy;
+
+    float fxOverDelta;
+    bool *choosetx, *choosety, *choosetz, *choosebx, *chooseby, *choosebz;
+    bool *chooselx, *choosely, *chooselz, *chooserx, *choosery, *chooserz;
+
+
 };
 
 void testOctree(ReconstructOctree *mytree, Point cubeSize);

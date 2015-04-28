@@ -1,6 +1,7 @@
 #include "include/ReconstructOctree.h"
 #include <ctime>
 #include <math.h>
+#include <string>
 #include "include/para.h"
 
 using namespace std;
@@ -13,7 +14,7 @@ ReconstructOctree::ReconstructOctree(int maxNode, Point fullSize, Point endSize,
                                    int rotation_digits)
 	:Octree(maxNode, fullSize, endSize)
 {
-        cout << "Loading " << nfile << " rotation images with prefix: " <<  sil_prefix <<endl;
+        cout << "Loading " << nfile << " rotation images with prefix: " <<  sil_prefix << endl;
 	readSilhouettes(sil_prefix, nfile, file_ext, rotation_digits);
     // tw 2015feb5
 //    readConfiguration(file_conf);
@@ -48,7 +49,7 @@ void ReconstructOctree::readSilhouettes(string file_prefix, int nfile,
                 break;
               case 3:
                 if (file < 9) filename.append("00");
-                if (file >= 9 and file < 99) filename.append("0");
+                if (file >= 9 && file < 99) filename.append("0");
                 break;
               default:
                 //msg= 'Only two or three digits allowed for rotation number';
@@ -190,7 +191,7 @@ void ReconstructOctree::readConfiguration()
     int i;
     float *iter_rs;
 
-    std::vector <std::vector <float> > img_para;
+    std::vector <std::vector <double> > img_para;
 
 
     switch ( nimages*2 )

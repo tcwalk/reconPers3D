@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core
+#QT       += core
 
 QT       -= gui
 
@@ -12,13 +12,15 @@ QT       -= gui
 TARGET = reconstruction3D
 CONFIG   += console
 CONFIG   -= app_bundle
+CONFIG   += static
 
 CONFIG += c++11
 
 QMAKE_CXXFLAGS += -std=c++11
-
+#QMAKE_LFLAGS += -static-libgcc
 
 TEMPLATE = app
+
 
 
 SOURCES += src/Main.cpp \
@@ -40,4 +42,16 @@ HEADERS += \
     include/util.h \
     include/para.h
 
-unix|win32: LIBS += -lX11 -lpng
+
+
+unix:INCLUDEPATH += $$PWD
+unix: LIBS += -lX11 -lpng
+
+
+win32:INCLUDEPATH += C:/Users/tom/danforth/roots3d/reconstruction3D/
+
+win32:LIBS += \
+    $$PWD/lib/libpng16.lib \
+    $$PWD/lib/x86/User32.Lib \
+    $$PWD/lib/x86/Gdi32.Lib \
+    $$PWD/lib/x86/shell32.lib
