@@ -11,7 +11,7 @@ ReconstructOctree::ReconstructOctree(int maxNode, Point fullSize, Point endSize,
 //									 string file_ext, string file_conf,
                                      string file_ext,
                                      int distortion_radius,
-                                   int rotation_digits)
+                                   int rotation_digits, float fxOverDelta)
 	:Octree(maxNode, fullSize, endSize)
 {
         cout << "Loading " << nfile << " rotation images with prefix: " <<  sil_prefix << endl;
@@ -29,8 +29,8 @@ void ReconstructOctree::readSilhouettes(string file_prefix, int nfile,
 {
     silhouette_stat = new int** [nfile];
 
-	char buffer[10];    
-        char buffer2[10];
+    char buffer[10];
+    char buffer2[10];
 	int i, j, count;
 	int *iter;
 	int **counts;
@@ -66,7 +66,7 @@ void ReconstructOctree::readSilhouettes(string file_prefix, int nfile,
             counts = silhouette_stat[file] = new int* [image_height];
 
             i = 0;
-            iter = counts[0] = new int [image_width];
+            iter = counts[i] = new int [image_width];
             count = 0;
             for (j = 0; j < image_width; j++)
             {
@@ -331,39 +331,48 @@ unsigned int ReconstructOctree::check(Point lp, Point hp, int &radius, int &nIma
 	int y[2] = {lp.y, hp.y};
 	int z[2] = {hp.z, lp.z};
 	
-	int lr=0, hr=0, lc=0, hc=0, count;
-	int nfail = 0;
-	bool isFull = true;
-	int r;
-	
-	radius = 0;
-	nImagesConsistent = nimages;
-	for (int image = 0; image < nimages; image++)
-	{
-		orthographicProject(image, Point(x[chooselx[image]], y[choosely[image]], z[0]), lr, lc);
-		orthographicProject(image, Point(x[choosehx[image]], y[choosehy[image]], z[1]), hr, hc);
-		if (getSilStat(image, lr, lc, hr, hc)==0) nImagesConsistent--;
-		for  (r = 0; r <= distortion_radius; ++r) {
-			count = getSilStat(image, lr-r, lc-r, hr+r, hc+r);
-			if (count > 0) break;
-		}
-		if (count == 0) return 0;
-		if (isFull && count < (hr-lr+1)*(hc-lc+1))
-			isFull = false;
-		radius += r;
-	}
+    int lr=0, rr=0, lc=0, rc=0, count;
+    int tr=0, br=0, tc=0, bc=0;
+    int nfail = 0;
+    bool isFull = true;
+    int r;
+
+    radius = 0;
+    nImagesConsistent = nimages;
+    for (int image = 0; image < nimages; image++)
+    {
+        PerspectiveProject(image, Point(x[chooselx[image]], y[choosely[image]], z[chooselz[image]]), lr, lc);
+        PerspectiveProject(image, Point(x[chooserx[image]], y[choosery[image]], z[chooserz[image]]), rr, rc);
+        PerspectiveProject(image, Point(x[choosetx[image]], y[choosety[image]], z[choosetz[image]]), tr, tc);
+        PerspectiveProject(image, Point(x[choosebx[image]], y[chooseby[image]], z[choosebz[image]]), br, bc);
+        if (getSilStat(image, tr, lc, br, rc)==0) nImagesConsistent--;
+        for  (r = 0; r <= distortion_radius; ++r) {
+            count = getSilStat(image, tr-r, lc-r, br+r, rc+r);
+            if (count > 0) break;
+        }
+        if (count == 0) return 0;
+        if (isFull && count < (br-tr+1)*(rc-lc+1))
+            isFull = false;
+        radius += r;
+
+    }
 
 	if (isFull) return 1;
 	return 2;
 }
 
-void ReconstructOctree::orthographicProject(int image, Point p, int& row, int& col)
+void ReconstructOctree::PerspectiveProject(int image, Point p, int& row, int& col)
 {
-	float *iter_rs;
-	iter_rs = Rs[image];
-	row = (int)floor(scales[0]*(-(p.z - halfSize.z)) + image_center_x);
-	col = (int)floor(scales[1]*(iter_rs[0] * (p.x - halfSize.x)
-						+ iter_rs[1] * (p.y - halfSize.y)) + image_center_y);
+    float *iter_rs;
+    iter_rs = Rs[image];
+    float tempX = p.x - halfSize.x;
+    float tempY = p.y - halfSize.y;
+    float tempZ = -(p.z - halfSize.z);
+    float tempFxOverDeltaOverXPlus = fxOverDelta / (iter_rs[1] * tempX - iter_rs[0] * tempY + fxOverDelta);
+
+    row = (int)floor(scales[0]*tempZ*tempFxOverDeltaOverXPlus + image_center_x);
+    col = (int)floor(scales[1]*tempFxOverDeltaOverXPlus*(iter_rs[0] * tempX
+                        + iter_rs[1] * tempY) + image_center_y);
 }
 
 void ReconstructOctree::setResolution(Point cubeSize)
@@ -376,35 +385,62 @@ void ReconstructOctree::setResolution(Point cubeSize)
 	//	<< scales[0] << " " << scales[1] << endl;
 
 	//	compute which to choose to form a rectangle backprojected on the image
-	chooselx = new bool[nimages];
-	choosely = new bool[nimages];
-	choosehx = new bool[nimages];
-	choosehy = new bool[nimages];
+    choosetx = new bool[nimages];
+    choosety = new bool[nimages];
+    choosetz = new bool[nimages];
+    choosebx = new bool[nimages];
+    chooseby = new bool[nimages];
+    choosebz = new bool[nimages];
+    chooselx = new bool[nimages];
+    choosely = new bool[nimages];
+    chooselz = new bool[nimages];
+    chooserx = new bool[nimages];
+    choosery = new bool[nimages];
+    chooserz = new bool[nimages];
 
-	int x[2] = {0, fullSize.x};
-	int y[2] = {0, fullSize.y};
-	int minc = 0, maxc = 0;
-	int row=0, col=0;
-	for (int image = 0; image < nimages; image++)
-	{
+    int x[2] = {0, fullSize.x};
+    int y[2] = {0, fullSize.y};
+    int z[2] = {0, fullSize.z};
+    int minc = 0, maxc = 0, minr = 0, maxr = 0;
+    int row=0, col=0;
+    for (int image = 0; image < nimages; image++)
+    {
         for (int i = 0; i < 2; i++)
             for (int j = 0; j < 2; j++)
-			{
-				orthographicProject(image, Point(x[i], y[j], 0), row, col);
-				if (i == 0 && j == 0 || col < minc)
-				{
-					minc = col;
-					chooselx[image] = (bool)i;
-					choosely[image] = (bool)j;
-				}
-				if (i == 0 && j == 0 || col > maxc)
-				{
-					maxc = col;
-					choosehx[image] = (bool)i;
-					choosehy[image] = (bool)j;
-				}
-			}
-	}
+                for (int k = 0; k < 2; k++)
+                {
+                    PerspectiveProject(image, Point(x[i], y[j], z[k]), row, col);
+                    if (i == 0 && j == 0 && k == 0 || col < minc)
+                    {
+                        minc = col;
+                        chooselx[image] = (bool)i;
+                        choosely[image] = (bool)j;
+                        chooselz[image] = (bool)k;
+                    }
+                    if (i == 0 && j == 0 && k == 0 || col > maxc)
+                    {
+                        maxc = col;
+                        chooserx[image] = (bool)i;
+                        choosery[image] = (bool)j;
+                        chooserz[image] = (bool)k;
+                    }
+                    if (i == 0 && j == 0 && k == 0 || row < minr)
+                    {
+                        minr = row;
+                        choosetx[image] = (bool)i;
+                        choosety[image] = (bool)j;
+                        choosetz[image] = (bool)k;
+                    }
+                    if (i == 0 && j == 0 && k == 0 || row > maxr)
+                    {
+                        maxr = row;
+                        choosebx[image] = (bool)i;
+                        chooseby[image] = (bool)j;
+                        choosebz[image] = (bool)k;
+                    }
+                }
+    }
+    //cout << "setResolution end" << endl;
 }
 
 void ReconstructOctree::dropImage()
@@ -449,8 +485,8 @@ bool ReconstructOctree::addConsistency(int refImageID, int* consistency, int* re
 		y[0] = p_point->y; y[1] = p_point->y+1;
 		z[0] = p_point->z; z[1] = p_point->z+1;
 
-		orthographicProject(refImageID, Point(x[chooselx[refImageID]], y[choosely[refImageID]], z[0]), lr, lc);
-		orthographicProject(refImageID, Point(x[choosehx[refImageID]], y[choosehy[refImageID]], z[1]), hr, hc);
+        PerspectiveProject(refImageID, Point(x[chooselx[refImageID]], y[choosely[refImageID]], z[0]), lr, lc);
+        PerspectiveProject(refImageID, Point(x[chooserx[refImageID]], y[choosery[refImageID]], z[1]), hr, hc);
 
 		if (lr>hr) {tmp = lr; lr = hr; hr = tmp;}
 		if (lc>hc) {tmp = lc; lc = hc; hc = tmp;}

@@ -46,6 +46,7 @@ int Octree::construct()
 	int i,j,k;
 	int nImagesConsistent, radius;
 	int nstep = 0;
+
 	while (cur<nnode)
 	{
 		result = check(lps[cur], hps[cur], radius, nImagesConsistent);
@@ -72,6 +73,13 @@ int Octree::construct()
 				nleaf++;
 				nvoxel += (hps[cur].x-lps[cur].x)*(hps[cur].y-lps[cur].y)
 							*(hps[cur].z-lps[cur].z);
+                /*cout<<hps[cur].x<<endl;
+                cout<<hps[cur].y<<endl;
+                cout<<hps[cur].z<<endl;
+                cout<<lps[cur].x<<endl;
+                cout<<lps[cur].y<<endl;
+                cout<<lps[cur].z<<endl;*/
+
 			}
 			else 
 			{

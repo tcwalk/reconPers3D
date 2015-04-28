@@ -165,6 +165,10 @@ int main(int argc, char** argv)
     double ratio = atof(argv[14]);
 
 
+    // njiang 2015apr added for perspective projection
+    float pixelSize = 0.4;//0.204; 0.1 //unit mm
+    float Dist2AOR = 1.27*1000;//3.05,1.27
+    float fxOverDelta = Dist2AOR / pixelSize;
 
 
 
@@ -202,7 +206,7 @@ int main(int argc, char** argv)
           ReconstructOctree octree(numNodesOnOctree, fullsize, Unit, silPrefix,
 //                                      numImgUsed, ".bmp", paraFilePathName,
                                       numImgUsed, ".png",
-                                      distortion_radius,rotation_digits);
+                                      distortion_radius,rotation_digits, fxOverDelta);
           Point volsize(fullsize/sampling);
           testOctree(&octree, volsize);
 
@@ -277,7 +281,7 @@ int main(int argc, char** argv)
           ReconstructOctree octree(numNodesOnOctree, fullsize, Unit, silPrefix,
 //                                            numImgUsed, ".bmp", paraFilePathName,
                                             numImgUsed, ".png",
-                                            distortion_radius, rotation_digits);
+                                            distortion_radius, rotation_digits, fxOverDelta);
           Point volsize(fullsize/sampling);
           distortion_radius = 0;
           int *consistency, *reliability;
