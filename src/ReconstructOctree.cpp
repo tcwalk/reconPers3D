@@ -6,13 +6,17 @@
 
 using namespace std;
 
-ReconstructOctree::ReconstructOctree(int maxNode, Point fullSize, Point endSize, 
+const float PI = 3.14159265358979;
+
+ReconstructOctree::ReconstructOctree(int maxNode, Point fullSize, Point endSize,
 									 string sil_prefix, int nfile, 
 //									 string file_ext, string file_conf,
                                      string file_ext,
-                                     int distortion_radius,
-                                   int rotation_digits, float fxOverDelta)
-	:Octree(maxNode, fullSize, endSize)
+                                     int distortion_radius, int rotation_digits, float rotationDir,
+                                     float fxOverDelta, float translation, float skewRoll, float skewPitch,
+                                     float focusOffset, int offsetXleft, int offsetZbottom,
+                                     float offsetImgX, float offsetImgY)
+    :Octree(maxNode, fullSize, endSize)
 {
         cout << "Loading " << nfile << " rotation images with prefix: " <<  sil_prefix << endl;
 	readSilhouettes(sil_prefix, nfile, file_ext, rotation_digits);
@@ -20,7 +24,22 @@ ReconstructOctree::ReconstructOctree(int maxNode, Point fullSize, Point endSize,
 //    readConfiguration(file_conf);
     readConfiguration();
     this->distortion_radius = distortion_radius;
-	cout << "Loaded all the images." << endl;
+
+    //Ni 2015April27
+    this->rotationDir = rotationDir;
+    this->fxOverDelta = fxOverDelta;
+    this->translation = translation;
+    this->focusOffset = focusOffset;
+    this->sineSkewRoll = sin(skewRoll*PI/180);
+    this->cosineSkewRoll = cos(skewRoll*PI/180);
+    this->sineSkewPitch = sin(skewPitch*PI/180);
+    this->cosineSkewPitch = cos(skewPitch*PI/180);
+    this->offsetXleft = offsetXleft;
+    this->offsetZbottom = offsetZbottom;
+    this->offsetImgX = offsetImgX;
+    this->offsetImgY = offsetImgY;
+
+    cout << "Loaded all the images." << endl;
 }
 
 void ReconstructOctree::readSilhouettes(string file_prefix, int nfile, 
@@ -34,30 +53,58 @@ void ReconstructOctree::readSilhouettes(string file_prefix, int nfile,
 	int i, j, count;
 	int *iter;
 	int **counts;
+
+    int firstNum;
+    int file_num;
+
+    firstNum = getFirstFileNum(file_prefix, rotation_digits, file_ext);
+    if ( firstNum == -999 )
+    {
+        cout << "Invalid number format for image files" << endl;
+        cout << "File number must be 2 or 3 digits starting with 0 or 1" << endl;
+        cout << "00, 01, 000, or 001" << endl;
+        cout << "Please rename files before trying again" << endl;
+        exit(0);
+    }
+
+
 	for (int file = 0; file < nfile; file++)
 	{
             // read bmp image
-            int file_num = file+1;
+
+            // tw 2015apr29 allow images to start with 0 or 1
+            if ( firstNum == 0 ) file_num = file;
+            else file_num = file + 1;
+            // int file_num = file+1;
+
             cout << "load #" << file_num << " image" << endl;
             string filename = file_prefix;
-            sprintf(buffer, "%d", file+1);
-        
+            //sprintf(buffer, "%d", file+1);
+            sprintf(buffer, "%d", file_num);
+
             switch (rotation_digits)
             {
               case 2:
-                if (file < 9) filename.append("0");
+                //if (file < 9) filename.append("0");
+                if ( firstNum == 0 && file < 10) filename.append("0");
+                else if ( firstNum == 1 && file < 9) filename.append("0");
                 break;
               case 3:
-                if (file < 9) filename.append("00");
-                if (file >= 9 && file < 99) filename.append("0");
+                //if (file < 9) filename.append("00");
+                //if (file >= 9 && file < 99) filename.append("0");
+                if (firstNum == 0 && file < 10) filename.append("00");
+                else if (firstNum == 1 && file < 9) filename.append("00");
+                else if (firstNum == 0 && file >= 10 && file < 100) filename.append("0");
+                else if (firstNum == 1 && file >= 9 && file < 99) filename.append("0");
                 break;
               default:
                 //msg= 'Only two or three digits allowed for rotation number';
                 cout << "Only two or three digits allowed for rotation number" << endl;
                 sprintf(buffer2, "%d", rotation_digits);
             }
-        
+
             filename.append(buffer);
+            //filename.append(file_num);
             filename.append(file_ext);
 
             bool** myimg = readBlackWhiteImage(filename, image_height, image_width);
@@ -319,6 +366,62 @@ void ReconstructOctree::readConfiguration()
 
 }
 
+
+
+int ReconstructOctree::getFirstFileNum(string file_prefix, int rotation_digits, string file_extension)
+{
+    string filename = file_prefix;
+    int retVal = -999;
+    string firstFileNum;
+
+    switch (rotation_digits)
+    {
+      case 2:
+        filename.append("0");
+        break;
+      case 3:
+        filename.append("00");
+        break;
+      default:
+        return retVal;
+    }
+
+    string filename0 = filename;
+    string filename1 = filename;
+
+    filename0.append("0");
+    filename0.append(file_extension);
+    filename1.append("1");
+    filename1.append(file_extension);
+
+
+    if ( FILE * file0 = fopen(filename0.c_str(), "r") )
+    {
+        cout << "file0 " << filename0 << endl;
+        fclose(file0);
+        retVal = 0;
+        return retVal;
+    }
+    else if ( FILE * file1 = fopen(filename1.c_str(), "r") )
+    {
+        cout << "file1 " << filename1 << endl;
+        fclose(file1);
+        retVal = 1;
+        return retVal;
+    }
+    else
+    {
+        return retVal;
+    }
+
+    return retVal;
+
+}
+
+
+
+
+
 unsigned int ReconstructOctree::check(Point lp, Point hp, int &radius, int &nImagesConsistent)
 {
 	// check whether lp is a lower point than hp
@@ -327,9 +430,11 @@ unsigned int ReconstructOctree::check(Point lp, Point hp, int &radius, int &nIma
 		return 0;
 	}
 	
-	int x[2] = {lp.x, hp.x};
+
+    //Ni 2015April27
+    int x[2] = {lp.x, hp.x};
 	int y[2] = {lp.y, hp.y};
-	int z[2] = {hp.z, lp.z};
+    int z[2] = {lp.z, hp.z};
 	
     int lr=0, rr=0, lc=0, rc=0, count;
     int tr=0, br=0, tc=0, bc=0;
@@ -341,39 +446,94 @@ unsigned int ReconstructOctree::check(Point lp, Point hp, int &radius, int &nIma
     nImagesConsistent = nimages;
     for (int image = 0; image < nimages; image++)
     {
-        PerspectiveProject(image, Point(x[chooselx[image]], y[choosely[image]], z[chooselz[image]]), lr, lc);
-        PerspectiveProject(image, Point(x[chooserx[image]], y[choosery[image]], z[chooserz[image]]), rr, rc);
-        PerspectiveProject(image, Point(x[choosetx[image]], y[choosety[image]], z[choosetz[image]]), tr, tc);
-        PerspectiveProject(image, Point(x[choosebx[image]], y[chooseby[image]], z[choosebz[image]]), br, bc);
-        if (getSilStat(image, tr, lc, br, rc)==0) nImagesConsistent--;
+        /*orthographicProject(image, Point(x[chooselx[image]], y[choosely[image]], z[0]), lr, lc);
+        //orthographicProject(image, Point(x[choosehx[image]], y[choosehy[image]], z[1]), hr, hc);
+        //if (getSilStat(image, lr, lc, hr, hc)==0) nImagesConsistent--;
+        for  (r = 0; r <= distortion_radius; ++r) {
+            count = getSilStat(image, lr-r, lc-r, hr+r, hc+r);
+            if (count > 0) break;
+        }
+        if (count == 0) return 0;
+        if (isFull && count < (hr-lr+1)*(hc-lc+1))
+            isFull = false;*/
+
+        perspectiveProject(image, Point(x[chooselx[image]], y[choosely[image]], z[chooselz[image]]), lr, lc);
+        perspectiveProject(image, Point(x[chooserx[image]], y[choosery[image]], z[chooserz[image]]), rr, rc);
+        perspectiveProject(image, Point(x[choosetx[image]], y[choosety[image]], z[choosetz[image]]), tr, tc);
+        perspectiveProject(image, Point(x[choosebx[image]], y[chooseby[image]], z[choosebz[image]]), br, bc);
+        if (getSilStat(image, tr, lc, br, rc)==0)
+        {
+            //cout << "getSilStat 0" << endl;
+            nImagesConsistent--;
+        }
         for  (r = 0; r <= distortion_radius; ++r) {
             count = getSilStat(image, tr-r, lc-r, br+r, rc+r);
             if (count > 0) break;
         }
-        if (count == 0) return 0;
+        if (count == 0)
+        {
+            //cout << "count " << count << endl;
+            return 0;
+        }
         if (isFull && count < (br-tr+1)*(rc-lc+1))
             isFull = false;
         radius += r;
 
     }
+    //cout << "count " << count << endl;
 
 	if (isFull) return 1;
 	return 2;
 }
 
-void ReconstructOctree::PerspectiveProject(int image, Point p, int& row, int& col)
+
+void ReconstructOctree::orthographicProject(int image, Point p, int& row, int& col)
 {
     float *iter_rs;
     iter_rs = Rs[image];
-    float tempX = p.x - halfSize.x;
-    float tempY = p.y - halfSize.y;
-    float tempZ = -(p.z - halfSize.z);
-    float tempFxOverDeltaOverXPlus = fxOverDelta / (iter_rs[1] * tempX - iter_rs[0] * tempY + fxOverDelta);
-
-    row = (int)floor(scales[0]*tempZ*tempFxOverDeltaOverXPlus + image_center_x);
-    col = (int)floor(scales[1]*tempFxOverDeltaOverXPlus*(iter_rs[0] * tempX
-                        + iter_rs[1] * tempY) + image_center_y);
+    row = (int)floor(scales[0]*(-(p.z - halfSize.z)) + image_center_x);
+    col = (int)floor(scales[1]*(iter_rs[0] * (p.x - halfSize.x)
+                        + iter_rs[1] * (p.y - halfSize.y)) + image_center_y);
 }
+
+void ReconstructOctree::perspectiveProject(int image, Point p, int& row, int& col)
+{
+    float *iter_rs;
+    iter_rs = Rs[image];
+    float tempX = scales[1] * p.x + offsetXleft;
+    float tempY = scales[1] * p.y + offsetXleft;
+    float tempZ = -(scales[0] * p.z + offsetZbottom);
+
+    float transformedTurnX = iter_rs[1] * tempX - iter_rs[0] * rotationDir * tempY;
+    float transformedTurnY = iter_rs[0] * rotationDir * tempX + iter_rs[1] * tempY;
+    float transformedTurnZ = tempZ;
+
+    float transformedRollX = transformedTurnX;
+    float transformedRollY = transformedTurnY*(cosineSkewRoll)-transformedTurnZ*(sineSkewRoll);
+    float transformedRollZ = transformedTurnY*(sineSkewRoll)+transformedTurnZ*(cosineSkewRoll);
+
+    float transformedPitchX = -transformedRollZ*(sineSkewPitch)+transformedRollX*(cosineSkewPitch);
+    float transformedPitchY = transformedRollY;
+    float transformedPitchZ = transformedRollZ*(cosineSkewPitch)+transformedRollX*(sineSkewPitch);
+
+    tempX = transformedPitchX - focusOffset;
+    tempZ = transformedPitchZ;
+    tempY = transformedPitchY - translation;
+
+    // to approach orthographic, if fxoverdelta -> infinity then tempFxOverDeltaOverXPlus -> 1
+    float tempFxOverDeltaOverXPlus = fxOverDelta / (tempX + fxOverDelta);
+
+
+    row = (int)floor(tempZ*tempFxOverDeltaOverXPlus - offsetImgX);
+    col = (int)floor(tempY*tempFxOverDeltaOverXPlus - offsetImgY);
+
+    /*cout << tempX << endl;
+    cout << tempY << endl;
+    cout << tempZ << endl;
+    cout << "row" << row << endl;
+    cout << col << endl;*/
+}
+
 
 void ReconstructOctree::setResolution(Point cubeSize)
 {
@@ -405,33 +565,51 @@ void ReconstructOctree::setResolution(Point cubeSize)
     int row=0, col=0;
     for (int image = 0; image < nimages; image++)
     {
+        /* for (int i = 0; i < 2; i++)
+             for (int j = 0; j < 2; j++)
+             {
+                 orthographicProject(image, Point(x[i], y[j], 0), row, col);
+                 if (i == 0 && j == 0 || col < minc)
+                 {
+                     minc = col;
+                     chooselx[image] = (bool)i;
+                     choosely[image] = (bool)j;
+                 }
+                 if (i == 0 && j == 0 || col > maxc)
+                 {
+                     maxc = col;
+                     choosehx[image] = (bool)i;
+                     choosehy[image] = (bool)j;
+                 }
+             }*/
+
         for (int i = 0; i < 2; i++)
             for (int j = 0; j < 2; j++)
                 for (int k = 0; k < 2; k++)
                 {
-                    PerspectiveProject(image, Point(x[i], y[j], z[k]), row, col);
-                    if (i == 0 && j == 0 && k == 0 || col < minc)
+                    perspectiveProject(image, Point(x[i], y[j], z[k]), row, col);
+                    if ( ( i == 0 && j == 0 && k == 0 ) || col < minc )
                     {
                         minc = col;
                         chooselx[image] = (bool)i;
                         choosely[image] = (bool)j;
                         chooselz[image] = (bool)k;
                     }
-                    if (i == 0 && j == 0 && k == 0 || col > maxc)
+                    if ( ( i == 0 && j == 0 && k == 0 ) || col > maxc)
                     {
                         maxc = col;
                         chooserx[image] = (bool)i;
                         choosery[image] = (bool)j;
                         chooserz[image] = (bool)k;
                     }
-                    if (i == 0 && j == 0 && k == 0 || row < minr)
+                    if ( ( i == 0 && j == 0 && k == 0 ) || row < minr)
                     {
                         minr = row;
                         choosetx[image] = (bool)i;
                         choosety[image] = (bool)j;
                         choosetz[image] = (bool)k;
                     }
-                    if (i == 0 && j == 0 && k == 0 || row > maxr)
+                    if ( ( i == 0 && j == 0 && k == 0 ) || row > maxr)
                     {
                         maxr = row;
                         choosebx[image] = (bool)i;
@@ -485,8 +663,11 @@ bool ReconstructOctree::addConsistency(int refImageID, int* consistency, int* re
 		y[0] = p_point->y; y[1] = p_point->y+1;
 		z[0] = p_point->z; z[1] = p_point->z+1;
 
-        PerspectiveProject(refImageID, Point(x[chooselx[refImageID]], y[choosely[refImageID]], z[0]), lr, lc);
-        PerspectiveProject(refImageID, Point(x[chooserx[refImageID]], y[choosery[refImageID]], z[1]), hr, hc);
+        // not modified yet Ni 2015April27
+        orthographicProject(refImageID, Point(x[chooselx[refImageID]], y[choosely[refImageID]], z[0]), lr, lc);
+        orthographicProject(refImageID, Point(x[choosetx[refImageID]], y[choosety[refImageID]], z[1]), hr, hc);
+        //perspectiveProject(refImageID, Point(x[chooselx[refImageID]], y[choosely[refImageID]], z[0]), lr, lc);
+        //perspectiveProject(refImageID, Point(x[chooserx[refImageID]], y[choosery[refImageID]], z[1]), hr, hc);
 
 		if (lr>hr) {tmp = lr; lr = hr; hr = tmp;}
 		if (lc>hc) {tmp = lc; lc = hc; hc = tmp;}
@@ -533,6 +714,7 @@ bool ReconstructOctree::addConsistency(int refImageID, int* consistency, int* re
 
 void testOctree(ReconstructOctree *mytree, Point cubeSize) 
 {
+    //cout << "leaves " << mytree->getNumLeaf() << endl;
 	mytree->setResolution(cubeSize);
 	clock_t starttime = clock();
 	int feedback = mytree->construct();

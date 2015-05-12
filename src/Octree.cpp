@@ -32,6 +32,8 @@ int Octree::construct()
 	this->lps = new Point[maxNode];
 	this->hps = new Point[maxNode];
 
+    //cout << "maxNode" << maxNode << endl;
+
 	nnode = 1;
 	nleaf = 0;
 	nvoxel = 0;
@@ -47,10 +49,13 @@ int Octree::construct()
 	int nImagesConsistent, radius;
 	int nstep = 0;
 
+
+
 	while (cur<nnode)
 	{
 		result = check(lps[cur], hps[cur], radius, nImagesConsistent);
-		_reliability[cur] = radius;
+        // cout << "lps[cur] " << lps[cur].x << ", hps[cur] " << hps[cur].x << ", radius " << radius << ", nImagesConsistent " << nImagesConsistent << endl;
+        _reliability[cur] = radius;
 		_consistency[cur] = nImagesConsistent;
 		switch (result)
 		{
@@ -99,10 +104,11 @@ int Octree::construct()
 						}
 			}			
 		}
+        //cout << "nvoxel " << nvoxel << endl;
 		cur++;
 
 	}
-	cout << nnode << " nodes, " << nleaf << " leaves, " << nvoxel << "voxels." << endl;
+    //cout << nnode << " nodes, " << nleaf << " leaves, " << nvoxel << "voxels." << endl;
 
 	delete[] lps;
 	delete[] hps;

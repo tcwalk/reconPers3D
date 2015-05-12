@@ -165,11 +165,48 @@ int main(int argc, char** argv)
     double ratio = atof(argv[14]);
 
 
-    // njiang 2015apr added for perspective projection
-    float pixelSize = 0.4;//0.204; 0.1 //unit mm
-    float Dist2AOR = 1.27*1000;//3.05,1.27
-    float fxOverDelta = Dist2AOR / pixelSize;
+    //Ni April 29, 2015
+    int rawImgWidth = 2752;
+    int rawImgHeight = 2206;
+    int roiLeft = 0;
+    int roiTop = 1292;     // requires crop parameters
+    float pixelSize = 0.1;   // mm/pixel //requires scale
+    float dist2AOR = 1.27 * 1000; // 1.27m
+    float rotationDir = 1;  // 1 --clockwise, -1 --counter clockwise
+    bool doCalib = false;
+    float translation = 0.0f;
+    float skewRoll = 0.0f;
+    float skewPitch = 0.0f;
+    float focusOffset = 0.0f;
 
+
+    float fxOverDelta = dist2AOR / pixelSize;
+    int offsetXleft = -imgWidth / 2;
+    int roiBottom = rawImgHeight - imgHeight - roiTop;
+    int offsetZbottom = -rawImgHeight / 2 + roiBottom;
+    float offsetImgX = -rawImgHeight / 2.0f + roiTop;
+    float offsetImgY = -imgWidth / 2.0f;
+
+    if (doCalib == true)
+    {
+        offsetXleft = -rawImgWidth / 2 + roiLeft;
+        offsetImgY = -rawImgWidth / 2.0f + roiLeft;
+        translation = 10.0f;
+        skewRoll = 0.061;
+        skewPitch = 0.326;
+        focusOffset = 0.0f;
+    }
+
+
+/*
+    if height>width max=height
+    else max = width
+            //max~1000, fxOverDelta/max ~10-100
+    if ( fxOverDelta/max > 100// && roll < && pitch < )
+            orthographic
+            else
+            perspective
+ */
 
 
     cout << "Executing"<< endl;
@@ -206,7 +243,9 @@ int main(int argc, char** argv)
           ReconstructOctree octree(numNodesOnOctree, fullsize, Unit, silPrefix,
 //                                      numImgUsed, ".bmp", paraFilePathName,
                                       numImgUsed, ".png",
-                                      distortion_radius,rotation_digits, fxOverDelta);
+                                      distortion_radius,rotation_digits, rotationDir, fxOverDelta,
+                                      translation, skewRoll, skewPitch, focusOffset,
+                                      offsetXleft, offsetZbottom, offsetImgX, offsetImgY);
           Point volsize(fullsize/sampling);
           testOctree(&octree, volsize);
 
@@ -281,7 +320,10 @@ int main(int argc, char** argv)
           ReconstructOctree octree(numNodesOnOctree, fullsize, Unit, silPrefix,
 //                                            numImgUsed, ".bmp", paraFilePathName,
                                             numImgUsed, ".png",
-                                            distortion_radius, rotation_digits, fxOverDelta);
+                                            distortion_radius, rotation_digits, rotationDir, fxOverDelta,
+                                            translation, skewRoll, skewPitch, focusOffset,
+                                            offsetXleft, offsetZbottom, offsetImgX, offsetImgY);
+
           Point volsize(fullsize/sampling);
           distortion_radius = 0;
           int *consistency, *reliability;
@@ -298,10 +340,12 @@ int main(int argc, char** argv)
 
               cout << "construct octree..." << endl;
               octree.setDistortionRadius(distortion_radius);
+
               testOctree(&octree, volsize);
 
               cout << "generate candidate voxels..." << endl;
               npts = octree.getNumVoxel();
+              //cout << "npts " << npts<< endl;
               consistency = new int[npts];
               reliability = new int[npts];
               pts = new Point[npts];

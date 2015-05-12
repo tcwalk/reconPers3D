@@ -22,7 +22,10 @@ public:
 	*/
 	ReconstructOctree(int maxNode, Point fullSize, Point endSize,
 		string sil_prefix, int nfile, string file_ext,
-        int distortion_radius, int rotation_digits);
+        int distortion_radius, int rotation_digits, float rotationDir,
+                      float fxOverDelta, float translation, float skewRoll, float skewPitch,
+                      float focusOffset, int offsetXleft, int offsetZbottom,
+                      float offsetImgX, float offsetImgY);
 //        string file_conf, int distortion_radius, int rotation_digits);
 
 	/*
@@ -122,8 +125,12 @@ protected:
     // tw 2015apr27
     // Changes for perspective
 
-    //void orthographicProject(int image, Point p, int& row, int& col);
-    void PerspectiveProject(int image, Point p, int& row, int& col);
+    void orthographicProject(int image, Point p, int& row, int& col);
+    void perspectiveProject(int image, Point p, int& row, int& col);
+
+    // tw 2015apr28
+    // allow first file to be 0 or 1
+    int getFirstFileNum(string file_prefix, int rotation_digits, string file_extension);
 
 protected:
 	int*** silhouette_stat;							// #. 1's in the corresponding rectangle
@@ -135,16 +142,21 @@ protected:
 	float scales[2];								// zoom scale;
 	Point halfSize;									// half of the cube size
 
-	int distortion_radius;
-
-    // tw 2015apr27
-    // Changes for perspective
     //bool *chooselx, *choosely, *choosehx, *choosehy;
 
-    float fxOverDelta;
     bool *choosetx, *choosety, *choosetz, *choosebx, *chooseby, *choosebz;
     bool *chooselx, *choosely, *chooselz, *chooserx, *choosery, *chooserz;
 
+    /*Ni April 29, 2015 calibration parameters*/
+
+    float rotationDir;
+    float fxOverDelta;
+    float translation, focusOffset;
+    float sineSkewRoll, cosineSkewRoll, sineSkewPitch, cosineSkewPitch;
+    int offsetXleft, offsetZbottom;
+    float offsetImgX, offsetImgY;
+
+    int distortion_radius;
 
 };
 
