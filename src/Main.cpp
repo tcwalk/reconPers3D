@@ -2,6 +2,7 @@
 #include "include/connect.h"
 
 #include <sstream>
+#include <ctype.h>
 
 using namespace std;
 
@@ -88,7 +89,7 @@ int main(int argc, char** argv)
     }
     int opt = atoi(argv[1]);
 
-    if (opt!=1 || argc!=15) {
+    if (opt!=1 || argc!=27) {
         cout << "Invalid arguments" << endl;
         exit(-1);
     }
@@ -166,7 +167,7 @@ int main(int argc, char** argv)
 
 
     //Ni April 29, 2015
-    int rawImgWidth = 2752;
+/*    int rawImgWidth = 2752;
     int rawImgHeight = 2206;
     int roiLeft = 0;
     int roiTop = 1292;     // requires crop parameters
@@ -178,6 +179,35 @@ int main(int argc, char** argv)
     float skewRoll = 0.0f;
     float skewPitch = 0.0f;
     float focusOffset = 0.0f;
+*/
+
+    // tw 2015may13 change to command line arguments for pipeline
+    int rawImgWidth = atoi(argv[15]);
+    int rawImgHeight = atoi(argv[16]);
+    int roiLeft = atoi(argv[17]);
+    int roiTop = atoi(argv[18]);     // requires crop parameters
+    float pixelSize = atof(argv[19]);   // mm/pixel //requires scale
+    float dist2AOR = atof(argv[20]); //1.27 * 1000; // 1.27m
+    float rotationDir = atof(argv[21]);  // 1 --clockwise, -1 --counter clockwise
+
+    string calib = argv[22];
+    for (int i = 0; i < calib.size(); i++)
+    {
+       calib[i] = toupper(calib[i]);
+    }
+
+    bool doCalib = false;
+    if ( calib == "TRUE" || calib == "T")
+    {
+        doCalib = true;
+    }
+
+
+    float translation = atof(argv[23]);
+    float skewRoll = atof(argv[24]);
+    float skewPitch = atof(argv[25]);
+    float focusOffset = atof(argv[26]);
+
 
 
     float fxOverDelta = dist2AOR / pixelSize;
